@@ -12,13 +12,17 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="PolyMod" Version="*" />
+        <PackageReference Include="PolyMod" Version="2.0.0-pre" />
     </ItemGroup>
-
+    <ItemGroup>
+        <Reference Include="Polibrary">
+            <HintPath>.\Polibrary.dll</HintPath>
+        </Reference>
+    </ItemGroup>
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
         <PropertyGroup>
             <ModFilesDir>$(ProjectDir)..\mod\</ModFilesDir>
-            <ZipFile>$(ProjectDir)..\wasdTemplate.polymod</ZipFile>
+            <ZipFile>$(ProjectDir)..\wLib.polymod</ZipFile>
 
             <SteamDir Condition="'$(SteamDir)' != ''">$(SteamDir)</SteamDir>
             <SteamDir Condition="'$(SteamDir)' == '' AND '$(OS)' == 'Windows_NT'">C:\Program Files (x86)\Steam</SteamDir>

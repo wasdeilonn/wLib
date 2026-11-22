@@ -1,15 +1,19 @@
 {
-    "id": "wasdtemplate",
-    "name": "wasdtemplate",
+    "id": "wlib",
+    "name": "wLib",
     "version": "1.0",
     "authors": [
-        "wasdtemplate"
+        "wasd_"
     ],
     "dependencies": [
         {
             "id": "polytopia",
             "min": "2.10.0"
+        },
+        {
+            "id": "polibrary",
+            "min": "2.1.5.2"
         }
     ],
-    "description": "wasdtemplate"
+    "description": "library almost as useless as me"
 }

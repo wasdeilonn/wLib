@@ -4,8 +4,10 @@ using UnityEngine;
 using Polytopia;
 using Polytopia.Data;
 using PolytopiaBackendBase.Common;
+using Il2CppInterop.Runtime.Injection;
+using Il2Gen = Il2CppSystem.Collections.Generic;
 
-namespace wasdTemplate;
+namespace wLib;
 
 public static class Main
 {
@@ -13,7 +15,87 @@ public static class Main
     public static void Load(ManualLogSource logger)
     {
         modLogger = logger;
-        modLogger.LogInfo("wasdtemplate");
         Harmony.CreateAndPatchAll(typeof(Main));
+        
+        PolyMod.Loader.AddPatchDataType("sfx", typeof(SFXTypes));
+        PolyMod.Loader.AddPatchDataType("improvementEffect", typeof(ImprovementEffect));
+
+        ClassInjector.RegisterTypeInIl2Cpp<GlobalTint>();
+        var go = new GameObject("GlobalTint");
+        UnityEngine.Object.DontDestroyOnLoad(go);
+        go.AddComponent<GlobalTint>(); 
+
+        logger.LogMessage("kys");
+    }
+
+    [HarmonyPrefix]
+    [HarmonyPriority(Priority.First)]
+    [HarmonyPatch(typeof(Tile), nameof(Tile.Render), typeof(MapRenderContext))]
+    [HarmonyPatch(typeof(Tile), nameof(Tile.Render), typeof(MapRenderContext), typeof(SkinVisualsTransientData))]
+    private static void ResetTile(Tile __instance)
+    {
+        TerrainMaterialHelper.SetSpriteTint(__instance.terrainRenderer.SpriteRenderer, new UnityEngine.Color(1f, 1f, 1f, 1f));
+
+        if (__instance.Resource != null)
+        {
+            TerrainMaterialHelper.SetSpriteTint(__instance.Resource.SpriteRenderer, new UnityEngine.Color(1f, 1f, 1f, 1f));
+        }
+
+        //__instance.shoreline.north.Sprite = ; TODO: somehow get the shoreline sprites to reset
+        TerrainMaterialHelper.SetSpriteTint(__instance.shoreline.north, new UnityEngine.Color(1f, 1f, 1f, 1f));
+        //__instance.shoreline.south.Sprite = PolyMod.Registry.GetSprite("shoreline");
+        TerrainMaterialHelper.SetSpriteTint(__instance.shoreline.south, new UnityEngine.Color(1f, 1f, 1f, 1f));
+        //__instance.shoreline.west.Sprite = PolyMod.Registry.GetSprite("shoreline");
+        TerrainMaterialHelper.SetSpriteTint(__instance.shoreline.west, new UnityEngine.Color(1f, 1f, 1f, 1f));
+        //__instance.shoreline.east.Sprite = PolyMod.Registry.GetSprite("shoreline");
+        TerrainMaterialHelper.SetSpriteTint(__instance.shoreline.east, new UnityEngine.Color(1f, 1f, 1f, 1f));
+    }
+
+    public static T Last<T>(this List<T> list)
+    {
+        return list[list.Count - 1];
+    }
+    public static T Last<T>(this Il2Gen.List<T> list)
+    {
+        return list[list.Count - 1];
+    }
+    public static T Last<T>(this T[] list)
+    {
+        return list[list.Length - 1];
+    }
+    public static TileData GetNeighbor(this TileData tile, GridDirection direction, GameState state)
+    {
+        WorldCoordinates toAdd = direction.ToCoordinates();
+
+        return state.Map.GetTile(tile.coordinates + toAdd);
+    }
+    public static bool IsFriendly(this UnitState target, byte originPlayer, GameState state)
+    {
+        if (!state.TryGetPlayer(originPlayer, out var player)) return false;
+
+        if (target.owner == originPlayer || target.HasActivePeaceTreaty(state, player))
+        {
+            return true;
+        }
+        return false;
+    }
+    public static bool IsFriendly(this TileData target, byte originPlayer, GameState state)
+    {
+        if (!state.TryGetPlayer(originPlayer, out var player)) return false;
+
+        if (target.owner == originPlayer || player.HasPeaceWith(target.owner))
+        {
+            return true;
+        }
+        return false;
+    }
+    public static void Get<T>(ref this T type, string name)
+    where T : struct
+    {
+        if (!EnumCache<T>.TryGetType(name, out type))
+        {
+            modLogger.LogFatal($"Can't find {name}");
+            return;
+        }
     }
 }
